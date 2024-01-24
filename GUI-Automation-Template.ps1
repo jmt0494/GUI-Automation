@@ -19,6 +19,19 @@ using System.Windows.Forms;
 
 public class Clicker
 {
+    [DllImport("gdi32.dll")]
+   static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
+   public enum DeviceCap {
+       VERTRES = 10,
+       DESKTOPVERTRES = 117
+   }
+   public static float scaling() {
+       Graphics g = Graphics.FromHwnd(IntPtr.Zero);
+       IntPtr desktop = g.GetHdc();
+       int LogicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.VERTRES);
+       int PhysicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.DESKTOPVERTRES);
+       return (float)PhysicalScreenHeight / (float)LogicalScreenHeight;
+   }
     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-input
     [StructLayout(LayoutKind.Sequential)]
     struct INPUT
@@ -63,11 +76,14 @@ public class Clicker
 
     public static void LeftClickAtPoint(int x, int y)
     {
+
+        float scale = scaling();
+
         // Move the mouse
         INPUT[] input = new INPUT[3];
 
-        input[0].mi.dx = x * (65535 / System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width);
-        input[0].mi.dy = y * (65535 / System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height);
+        input[0].mi.dx = x * (int)(65535 / (System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width * scale));
+        input[0].mi.dy = y * (int)(65535 / (System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height * scale));
         input[0].mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
 
         // Left mouse button down
@@ -81,56 +97,19 @@ public class Clicker
 }
 '@
 
-#this class finds the scaling factor, required to make screen grabs and pixel coordinate match the mouse coordinates
-Add-Type -TypeDefinition @"
-using System;
-using System.Runtime.InteropServices;
-using System.Drawing;
-
-public class DPI {
-   [DllImport("gdi32.dll")]
-   static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
-   public enum DeviceCap {
-       VERTRES = 10,
-       DESKTOPVERTRES = 117
-   }
-   public static float scaling() {
-       Graphics g = Graphics.FromHwnd(IntPtr.Zero);
-       IntPtr desktop = g.GetHdc();
-       int LogicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.VERTRES);
-       int PhysicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.DESKTOPVERTRES);
-       return (float)PhysicalScreenHeight / (float)LogicalScreenHeight;
-   }
-}
-"@ -ReferencedAssemblies 'System.Drawing.dll' -ErrorAction Stop
-
 Add-Type -TypeDefinition $cSource -ReferencedAssemblies System.Windows.Forms,System.Drawing
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
-$scaleFactor = [DPI]::scaling()
+$scaleFactor = [Clicker]::scaling()
 $screen = [System.Windows.Forms.Screen]::PrimaryScreen
 $adjustedWidth = [int][Math]::Round($screen.Bounds.Width * $scaleFactor)
 $AdjustedHeight = [int][Math]::Round($screen.Bounds.Height * $scaleFactor)
+
 
 #returns a bitmap of the current screen
 function Get-ScreenBitmap {
     $bitmap = (New-Object System.Drawing.Bitmap $adjustedWidth, $AdjustedHeight)
     return $bitmap
-}
-
-#adjusts an x coordinate for resolution scaling
-function Get-AdjustedX {
-    param ($x)
-
-    $adjustedX = [int]($x * ($scaleFactor-($adjustedWidth / 100000)))
-    return $adjustedX
-}
-
-##adjusts an y coordinate for resolution scaling
-function Get-AdjustedY {
-    param($y)
-    $adjustedY = [int]($y * ($scaleFactor-($AdjustedHeight / 100000)))
-    return $adjustedY
 }
 
 #returns a target pixel RGB from a bitmap. 
@@ -148,25 +127,35 @@ function Get-ColorAtPixel {
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     $graphics.CopyFromScreen($rectangle.X, $rectangle.Y, 0, 0, $rectangle.Size)
 
-
-    $adjustedX = Get-AdjustedX
-    $adjustedY = Get-AdjustedY
-
-    <# #this is to debug the pixel is that is being targeted
+     #this is to debug the pixel is that is being targeted
     $red = [System.Drawing.Color]::Red
-    $bitmap.SetPixel($adjustedX-1, $adjustedY-1, $red)
-    $bitmap.SetPixel($adjustedX-1, $adjustedY, $red)
-    $bitmap.SetPixel($adjustedX-1, $adjustedY+1, $red)
-    $bitmap.SetPixel($adjustedX, $adjustedY-1, $red)
-    $bitmap.SetPixel($adjustedX, $adjustedY, $red)
-    $bitmap.SetPixel($adjustedX, $adjustedY+1, $red)
-    $bitmap.SetPixel($adjustedX+1, $adjustedY-1, $red)
-    $bitmap.SetPixel($adjustedX+1, $adjustedY, $red)
-    $bitmap.SetPixel($adjustedX+1, $adjustedY+1, $red)
+    $bitmap.SetPixel($x-2, $y-2, $red)
+    $bitmap.SetPixel($x-2, $y-1, $red)
+    $bitmap.SetPixel($x-2, $y, $red)
+    $bitmap.SetPixel($x-2, $y+1, $red)
+    $bitmap.SetPixel($x-2, $y+2, $red)
+    $bitmap.SetPixel($x-1, $y-2, $red)
+    $bitmap.SetPixel($x-1, $y-1, $red)
+    $bitmap.SetPixel($x-1, $y, $red)
+    $bitmap.SetPixel($x-1, $y+1, $red)
+    $bitmap.SetPixel($x-1, $y+2, $red)
+    $bitmap.SetPixel($x, $y-2, $red)
+    $bitmap.SetPixel($x, $y-1, $red)
+    $bitmap.SetPixel($x, $y+1, $red)
+    $bitmap.SetPixel($x, $y+2, $red)
+    $bitmap.SetPixel($x+1, $y-2, $red)
+    $bitmap.SetPixel($x+1, $y-1, $red)
+    $bitmap.SetPixel($x+1, $y, $red)
+    $bitmap.SetPixel($x+1, $y+1, $red)
+    $bitmap.SetPixel($x+1, $y+2, $red)
+    $bitmap.SetPixel($x+2, $y-2, $red)
+    $bitmap.SetPixel($x+2, $y-1, $red)
+    $bitmap.SetPixel($x+2, $y, $red)
+    $bitmap.SetPixel($x+2, $y+1, $red)
+    $bitmap.SetPixel($x+2, $y+2, $red)
     $bitMap.save("C:\Users\John of the Cross\Desktop\bitmap.png")
-    #>
 
-    $color = $bitmap.GetPixel($adjustedX, $adjustedY)
+    $color = $bitmap.GetPixel($x, $adjustedY)
     $color
 }
 
@@ -193,7 +182,7 @@ function Wait-PixelColor {
 #Clicks at the specified coordinates. I think it is just cleaner to write the function name than calling the clicker class
 function Click {
     param($x, $y)
-    [Clicker]::LeftClickAtPoint($x,$y)
+    [Clicker]::LeftClickAtPoint($x + ($x * 0.00390625),$y + ($y * 0.01111111111))
 }
 
 #Simulates keyboard presses. Can execute any hotkeys as well as type text. 
@@ -225,8 +214,8 @@ function Tab {
 
 #used to find the location and color of a pixel
 function Test-CooridinatesAndColor {
-    $xval = 100
-    $yval = 100
+    $xval = 800
+    $yval = 800
     Write-Host $(Get-ColorAtPixel -x $xval -y $yval)
     Click $xval $yval
 }
@@ -239,3 +228,11 @@ function Main {
 # Main
 
 Test-CooridinatesAndColor
+
+# for ($i = 0; $i -lt 2000; $i = $i + 100) {
+#     Click $i $i
+#     Start-Sleep -Milliseconds 100
+# }
+
+
+
