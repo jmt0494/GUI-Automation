@@ -153,7 +153,7 @@ function Get-ColorAtPixel {
     $bitmap.SetPixel($x+2, $y, $red)
     $bitmap.SetPixel($x+2, $y+1, $red)
     $bitmap.SetPixel($x+2, $y+2, $red)
-    $bitMap.save("C:\Users\John of the Cross\Desktop\bitmap.png")
+    $bitMap.save("./bitmap.png")
 
     $color = $bitmap.GetPixel($x, $adjustedY)
     $color
