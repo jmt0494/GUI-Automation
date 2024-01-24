@@ -1,3 +1,5 @@
+# credit to https://www.youtube.com/watch?v=-7cFtMnseLI
+
 from pynput import *
 
 def get_coords(x, y) :
