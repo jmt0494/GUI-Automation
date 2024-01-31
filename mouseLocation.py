@@ -1,5 +1,3 @@
-# credit to https://www.youtube.com/watch?v=-7cFtMnseLI
-
 import subprocess
 from pynput import mouse
 
