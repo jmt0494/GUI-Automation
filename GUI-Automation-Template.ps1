@@ -137,7 +137,7 @@ function Get-ColorAtPixel {
     )
     #this is to debug the pixel is that is being targeted
     <#
-    {$red = [System.Drawing.Color]::Red
+    $red = [System.Drawing.Color]::Red
     $bitmap.SetPixel($x-2, $y-2, $red)
     $bitmap.SetPixel($x-2, $y-1, $red)
     $bitmap.SetPixel($x-2, $y, $red)
@@ -162,7 +162,7 @@ function Get-ColorAtPixel {
     $bitmap.SetPixel($x+2, $y, $red)
     $bitmap.SetPixel($x+2, $y+1, $red)
     $bitmap.SetPixel($x+2, $y+2, $red)
-    $bitMap.save("./bitmap.png"):Enter a comment or description}
+    $bitMap.save("./bitmap.png")
     #>
 
     $color = $bitmap.GetPixel($x, $y)
@@ -188,6 +188,7 @@ function Wait-PixelColor {
 #Clicks at the specified coordinates. I think it is just cleaner to write the function name than calling the clicker class
 function Click {
     param($x, $y)
+    #because of the way mouse locations are calculated, the mouse drifts the farther you go from the origin. These hard coded values correct that drift.
     [Clicker]::LeftClickAtPoint($x + ($x * 0.00390625),$y + ($y * 0.01111111111))
 }
 
@@ -222,7 +223,8 @@ function Tab {
 function Test-CooridinatesAndColor {
     $xval = 800
     $yval = 800
-    Write-Host $(Get-ColorAtPixel -x $xval -y $yval)
+    $color = Get-ColorAtPixel -x $xval -y $yval
+    Write-Host $color
     Click $xval $yval
 }
 
