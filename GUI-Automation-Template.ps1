@@ -3,11 +3,8 @@ Windows Machine often scale the display up on higher resolutions, to make the sc
 The actual resolution of the screen, for example a 4k monitor will usually run 3840 X 2160, is refered to as the physical resolution.
 The processor works off the scaled resolution, for example a 3840 X 2160 with a 150% scaling will be treated as 2560 X 1440, this is refered to as the logical resolution.
 Because the physical and logical resolution often are not the same, it is nessesary to adjust for the scaling when working with powershells native functions.
-In order to make the script capture the whole screen in its bitmaps I have had to adjust the size it is capturing.
-As a result I have adjusted all other function to work off of the logical resolution.
-This way the coordinates of the clicker class will match with the coordinates of other functions on the screen.
-It may have been possible to adjust the Clicker class to match the physical resolution instead, but I didn't.
-This works well enough for me, so just know that if your resolution is scaled up it you may be moving more than one pixel for each coordinate value you adjust.
+In order to make the script capture the whole screen in its bitmaps we need to account for this scaled.
+We also need to account for the scaling in the clicker class to make everything match the physical resolution of the screen
 #>
 
 # this class simulates mouse clicks
@@ -105,10 +102,27 @@ $screen = [System.Windows.Forms.Screen]::PrimaryScreen
 $adjustedWidth = [int][Math]::Round($screen.Bounds.Width * $scaleFactor)
 $AdjustedHeight = [int][Math]::Round($screen.Bounds.Height * $scaleFactor)
 
+class Pixel {
+    [int] $X
+    [int] $Y
+    [String] $Color
+
+    Pixel([hashtable]$Properties) {this.Init($Properties)}
+
+    [void] Init([hashtable]$Properties) {
+        foreach ($Property in $Properties.Keys) {
+            this.$Property = $Properties.$Property
+        }
+    }
+}
+
 
 #returns a bitmap of the current screen
 function Get-ScreenBitmap {
     $bitmap = (New-Object System.Drawing.Bitmap $adjustedWidth, $AdjustedHeight)
+    $rectangle = New-Object -TypeName System.Drawing.Rectangle -ArgumentList 0, 0, $adjustedWidth, $AdjustedHeight
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    $graphics.CopyFromScreen($rectangle.X, $rectangle.Y, 0, 0, $rectangle.Size)
     return $bitmap
 }
 
@@ -121,14 +135,9 @@ function Get-ColorAtPixel {
         [int]$y,
         [System.Drawing.Bitmap] $bitmap = [System.Drawing.Bitmap](Get-ScreenBitmap)
     )
-
-    $rectangle = New-Object -TypeName System.Drawing.Rectangle -ArgumentList 0, 0, $adjustedWidth, $AdjustedHeight
-
-    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
-    $graphics.CopyFromScreen($rectangle.X, $rectangle.Y, 0, 0, $rectangle.Size)
-
-     #this is to debug the pixel is that is being targeted
-    $red = [System.Drawing.Color]::Red
+    #this is to debug the pixel is that is being targeted
+    <#
+    {$red = [System.Drawing.Color]::Red
     $bitmap.SetPixel($x-2, $y-2, $red)
     $bitmap.SetPixel($x-2, $y-1, $red)
     $bitmap.SetPixel($x-2, $y, $red)
@@ -153,10 +162,11 @@ function Get-ColorAtPixel {
     $bitmap.SetPixel($x+2, $y, $red)
     $bitmap.SetPixel($x+2, $y+1, $red)
     $bitmap.SetPixel($x+2, $y+2, $red)
-    $bitMap.save("./bitmap.png")
+    $bitMap.save("./bitmap.png"):Enter a comment or description}
+    #>
 
     $color = $bitmap.GetPixel($x, $y)
-    $color
+    $color.Name
 }
 
 #Stops the script until the target pixel RGB value matches the provided RGB value
@@ -164,18 +174,14 @@ function Get-ColorAtPixel {
 #Much better than using Start-Sleep and hoping you gave it enough time for the page to load.
 function Wait-PixelColor {
     param(
-        $x,
-        $y,
-        $r,
-        $g,
-        $b
+        [Pixel] $Pixel
     )
 
-    $pixel = Get-ColorAtPixel -x $x -y $y
+    $targetPixel = Get-ColorAtPixel -x $Pixel.X -y $Pixel.Y
 
-    while(($pixel.R -ne $r) -and ($pixel.G -ne $g) -and ($pixel.B -ne $b)) {
+    while($targetPixel -ne $Pixel.Color) {
         Start-Sleep -Milliseconds 500
-        $pixel = Get-ColorAtPixel -x $x -y $y
+        $targetPixel = Get-ColorAtPixel -x $Pixel.X -y $Pixel.Y
     }
 }
 
