@@ -230,11 +230,10 @@ function Tab {
 
 #used to find the location and color of a pixel
 function Test-CooridinatesAndColor {
-    $xval = 800
-    $yval = 800
-    $color = Get-ColorAtPixel -x $xval -y $yval
+    $testPixel = [Pixel]::new(@{X=100; Y=100; Color=""})
+    $color = Get-ColorAtPixel $testPixel
     Write-Host $color
-    Click $xval $yval
+    Click $testPixel
 }
 
 # put main script logic here
