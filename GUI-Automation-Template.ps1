@@ -1,3 +1,4 @@
+#region BoilerPlate
 <#
 Windows Machine often scale the display up on higher resolutions, to make the screen easier to see.
 The actual resolution of the screen, for example a 4k monitor will usually run 3840 X 2160, is refered to as the physical resolution.
@@ -6,6 +7,7 @@ Because the physical and logical resolution often are not the same, it is nesses
 In order to make the script capture the whole screen in its bitmaps we need to account for this scaled.
 We also need to account for the scaling in the clicker class to make everything match the physical resolution of the screen
 #>
+
 
 # this class simulates mouse clicks
 $cSource = @'
@@ -94,6 +96,7 @@ public class Clicker
 }
 '@
 
+
 Add-Type -TypeDefinition $cSource -ReferencedAssemblies System.Windows.Forms,System.Drawing
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
@@ -101,6 +104,7 @@ $scaleFactor = [Clicker]::scaling()
 $screen = [System.Windows.Forms.Screen]::PrimaryScreen
 $adjustedWidth = [int][Math]::Round($screen.Bounds.Width * $scaleFactor)
 $AdjustedHeight = [int][Math]::Round($screen.Bounds.Height * $scaleFactor)
+
 
 class Pixel {
     [int] $X
@@ -126,48 +130,47 @@ function Get-ScreenBitmap {
     return $bitmap
 }
 
+
 #returns a target pixel RGB from a bitmap. 
-#by default it will use Get-ScreenBitmap for the bitmap, but a bitmap can be provided as well.
+#By default it will use Get-ScreenBitmap for the bitmap, but a bitmap can be provided as well.
 #this will help with perfomance if you need to iteroate over multiple pixels
 function Get-ColorAtPixel {
     param (
-        [int]$x,
-        [int]$y,
+        [Pixel] $pixel,
         [System.Drawing.Bitmap] $bitmap = [System.Drawing.Bitmap](Get-ScreenBitmap)
     )
     #this is to debug the pixel is that is being targeted
-    <#
     $red = [System.Drawing.Color]::Red
-    $bitmap.SetPixel($x-2, $y-2, $red)
-    $bitmap.SetPixel($x-2, $y-1, $red)
-    $bitmap.SetPixel($x-2, $y, $red)
-    $bitmap.SetPixel($x-2, $y+1, $red)
-    $bitmap.SetPixel($x-2, $y+2, $red)
-    $bitmap.SetPixel($x-1, $y-2, $red)
-    $bitmap.SetPixel($x-1, $y-1, $red)
-    $bitmap.SetPixel($x-1, $y, $red)
-    $bitmap.SetPixel($x-1, $y+1, $red)
-    $bitmap.SetPixel($x-1, $y+2, $red)
-    $bitmap.SetPixel($x, $y-2, $red)
-    $bitmap.SetPixel($x, $y-1, $red)
-    $bitmap.SetPixel($x, $y+1, $red)
-    $bitmap.SetPixel($x, $y+2, $red)
-    $bitmap.SetPixel($x+1, $y-2, $red)
-    $bitmap.SetPixel($x+1, $y-1, $red)
-    $bitmap.SetPixel($x+1, $y, $red)
-    $bitmap.SetPixel($x+1, $y+1, $red)
-    $bitmap.SetPixel($x+1, $y+2, $red)
-    $bitmap.SetPixel($x+2, $y-2, $red)
-    $bitmap.SetPixel($x+2, $y-1, $red)
-    $bitmap.SetPixel($x+2, $y, $red)
-    $bitmap.SetPixel($x+2, $y+1, $red)
-    $bitmap.SetPixel($x+2, $y+2, $red)
+    $bitmap.SetPixel($pixel.X-2, $pixel.Y-2, $red)
+    $bitmap.SetPixel($pixel.X-2, $pixel.Y-1, $red)
+    $bitmap.SetPixel($pixel.X-2, $pixel.Y, $red)
+    $bitmap.SetPixel($pixel.X-2, $pixel.Y+1, $red)
+    $bitmap.SetPixel($pixel.X-2, $pixel.Y+2, $red)
+    $bitmap.SetPixel($pixel.X-1, $pixel.Y-2, $red)
+    $bitmap.SetPixel($pixel.X-1, $pixel.Y-1, $red)
+    $bitmap.SetPixel($pixel.X-1, $pixel.Y, $red)
+    $bitmap.SetPixel($pixel.X-1, $pixel.Y+1, $red)
+    $bitmap.SetPixel($pixel.X-1, $pixel.Y+2, $red)
+    $bitmap.SetPixel($pixel.X, $pixel.Y-2, $red)
+    $bitmap.SetPixel($pixel.X, $pixel.Y-1, $red)
+    $bitmap.SetPixel($pixel.X, $pixel.Y+1, $red)
+    $bitmap.SetPixel($pixel.X, $pixel.Y+2, $red)
+    $bitmap.SetPixel($pixel.X+1, $pixel.Y-2, $red)
+    $bitmap.SetPixel($pixel.X+1, $pixel.Y-1, $red)
+    $bitmap.SetPixel($pixel.X+1, $pixel.Y, $red)
+    $bitmap.SetPixel($pixel.X+1, $pixel.Y+1, $red)
+    $bitmap.SetPixel($pixel.X+1, $pixel.Y+2, $red)
+    $bitmap.SetPixel($pixel.X+2, $pixel.Y-2, $red)
+    $bitmap.SetPixel($pixel.X+2, $pixel.Y-1, $red)
+    $bitmap.SetPixel($pixel.X+2, $pixel.Y, $red)
+    $bitmap.SetPixel($pixel.X+2, $pixel.Y+1, $red)
+    $bitmap.SetPixel($pixel.X+2, $pixel.Y+2, $red)
     $bitMap.save("./bitmap.png")
-    #>
 
-    $color = $bitmap.GetPixel($x, $y)
+    $color = $bitmap.GetPixel($pixel.X, $pixel.Y)
     $color.Name
 }
+
 
 #Stops the script until the target pixel RGB value matches the provided RGB value
 #useful for waiting for network requests and page loading times.
@@ -185,12 +188,14 @@ function Wait-PixelColor {
     }
 }
 
+
 #Clicks at the specified coordinates. I think it is just cleaner to write the function name than calling the clicker class
 function Click {
-    param($x, $y)
+    param([Pixel]$pixel)
     #because of the way mouse locations are calculated, the mouse drifts the farther you go from the origin. These hard coded values correct that drift.
-    [Clicker]::LeftClickAtPoint($x + ($x * 0.00390625),$y + ($y * 0.01111111111))
+    [Clicker]::LeftClickAtPoint($pixel.X + ($pixel.X * 0.00390625),$pixel.Y + ($pixel.Y * 0.01111111111))
 }
+
 
 #Simulates keyboard presses. Can execute any hotkeys as well as type text. 
 #For a list of spcial keys see https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.sendkeys?view=windowsdesktop-8.0&redirectedfrom=MSDN
@@ -198,6 +203,7 @@ function Send-Wait {
     param($keys)
     [System.Windows.Forms.SendKeys]::SendWait($keys)
 }
+
 
 #pastes provided text into the focus. Faster than usings Send-Wait
 function Enter-Text {
@@ -208,6 +214,7 @@ function Enter-Text {
     Send-Wait "^v"
 }
 
+
 #presses tab as many times as needed. Used to navigate elements of a page
 function Tab {
     param($numOfTabs)
@@ -217,15 +224,16 @@ function Tab {
     }
 }
 
+#endregion
+
 #Add custome functions here
 
 #used to find the location and color of a pixel
 function Test-CooridinatesAndColor {
-    $xval = 800
-    $yval = 800
-    $color = Get-ColorAtPixel -x $xval -y $yval
+    $testPixel = [Pixel]::new(@{X=100; Y=100; Color=""})
+    $color = Get-ColorAtPixel $testPixel
     Write-Host $color
-    Click $xval $yval
+    Click $testPixel
 }
 
 # put main script logic here
@@ -236,11 +244,4 @@ function Main {
 # Main
 
 Test-CooridinatesAndColor
-
-# for ($i = 0; $i -lt 2000; $i = $i + 100) {
-#     Click $i $i
-#     Start-Sleep -Milliseconds 100
-# }
-
-
 
