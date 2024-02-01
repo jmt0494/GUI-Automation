@@ -180,11 +180,11 @@ function Wait-PixelColor {
         [Pixel] $pixel
     )
 
-    $targetPixel = Get-ColorAtPixel -pixel $pixel
+    $targetColor = Get-ColorAtPixel -pixel $pixel
 
-    while($targetPixel -ne $pixel.Color) {
+    while($targetColor -ne $pixel.Color) {
         Start-Sleep -Milliseconds 500
-        $targetPixel = Get-ColorAtPixel -pixel $pixel
+        $targetColor = Get-ColorAtPixel -pixel $pixel
     }
 }
 
