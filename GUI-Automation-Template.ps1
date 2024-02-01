@@ -177,14 +177,14 @@ function Get-ColorAtPixel {
 #Much better than using Start-Sleep and hoping you gave it enough time for the page to load.
 function Wait-PixelColor {
     param(
-        [Pixel] $Pixel
+        [Pixel] $pixel
     )
 
-    $targetPixel = Get-ColorAtPixel -x $Pixel.X -y $Pixel.Y
+    $targetPixel = Get-ColorAtPixel -pixel $pixel
 
-    while($targetPixel -ne $Pixel.Color) {
+    while($targetPixel -ne $pixel.Color) {
         Start-Sleep -Milliseconds 500
-        $targetPixel = Get-ColorAtPixel -x $Pixel.X -y $Pixel.Y
+        $targetPixel = Get-ColorAtPixel -pixel $pixel
     }
 }
 
