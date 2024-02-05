@@ -1,11 +1,14 @@
-import subprocess
 from pynput import mouse
 
 def on_click(x, y, button, pressed):
     if button == mouse.Button.left and pressed:
-        print("Mouse clicked at: {}".format((x, y)))
-        result = subprocess.run([r"powershell.exe", r".\pixel-color.ps1 -xcoord {} -ycoord {}".format(x, y)], capture_output=True, text=True)
-        print(result.stdout)
+        print("{} {}".format(x, y))
+        # Stop the listener after the first click
+        listener.stop()
 
-with mouse.Listener(on_click=on_click) as listener:
-    listener.join()
+# Create the listener without starting it immediately
+listener = mouse.Listener(on_click=on_click)
+# Start the listener
+listener.start()
+# Wait for the listener to finish (which happens after the first click)
+listener.join()

@@ -1,5 +1,3 @@
-param([int]$xcoord, [int]$ycoord)
-
 # this class simulates mouse clicks
 $cSource = @'
 using System;
@@ -87,7 +85,16 @@ function Get-ColorAtPixel {
 
 # put main script logic here
 function Main {
-    Write-Output $(Get-ColorAtPixel -x $xcoord -y $ycoord)
+    $location = python .\mouseLocation.py
+    $coordinates = $location -split ' '
+    $x = [int]$coordinates[0]
+    $y = [int]$coordinates[1]
+
+    Write-Host "$x $y"
+    Write-Host $(Get-ColorAtPixel $x $y)
+
 }
 
-Main
+while ($true){
+    Main
+}
