@@ -1,7 +1,7 @@
 from pynput import mouse
 
 def on_click(x, y, button, pressed):
-    if button == mouse.Button.left and pressed:
+    if button == mouse.Button.right and pressed:
         print("{} {}".format(x, y))
         # Stop the listener after the first click
         listener.stop()
