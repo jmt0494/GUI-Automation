@@ -8,7 +8,7 @@ function Wait-PixelColor {
         [int] $seconds = 10
     )
 
-    $targetColor = Get-ColorAtPixel -pixel $pixel
+    $targetColor = Get-ColorAtPixel -pixel $pixel -debug $debug
 
     for ($i=0; ($targetColor -ne $pixel.Color) -and ($i -lt $seconds*2); $i++) {
         Start-Sleep -Milliseconds 500
