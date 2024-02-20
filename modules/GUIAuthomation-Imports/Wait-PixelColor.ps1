@@ -3,13 +3,18 @@
 #Much better than using Start-Sleep and hoping you gave it enough time for the page to load.
 function Wait-PixelColor {
     param(
-        [Pixel] $pixel
+        [Pixel] $pixel,
+        [Bool] $debug = $false,
+        [int] $seconds = 10
     )
 
     $targetColor = Get-ColorAtPixel -pixel $pixel
 
-    while($targetColor -ne $pixel.Color) {
+    for ($i=0; ($targetColor -ne $pixel.Color) -and ($i -lt $seconds*2); $i++) {
         Start-Sleep -Milliseconds 500
-        $targetColor = Get-ColorAtPixel -pixel $pixel
+        $targetColor = Get-ColorAtPixel -pixel $pixel -debug $debug
     }
+
+    if ($targetColor -ne $pixel.Color) {return $false}
+    else {return $true}
 }
