@@ -16,6 +16,9 @@ function Wait-PixelColor {
         $targetColor = Get-ColorAtPixel -pixel $pixel -debug $debug
     }
 
-    if ($targetColor -ne $pixel.Color) {return $false}
+    if ($targetColor -ne $pixel.Color) {
+        Write-host "Failed to find pixel @ X: $($pixel.X) Y: $($pixel.Y) $(Get-ColorAtPixel -pixel $pixel -debug $true -path $path -filename $filename)"
+        return $false
+    }
     else {return $true}
 }
